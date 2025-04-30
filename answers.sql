@@ -13,38 +13,65 @@ Write an SQL query to transform this table into 1NF, ensuring that each row repr
 */
 
 CREATE TABLE ProductDetail(
-	OrderID int PRIMARY KEY,
-	CustomerName varchar,
-	Products varchar
-	)
-;
-INSERT INTO ProductDetail(OrderID, CustomerName, Products)
-VALUES 
-	(101,'John Doe','Laptop,Mouse'),
-	(102,'Jane Smith','Tablet,Keyboard,Mouse'),
-	(103,'Emily Clark','Phone')
-;
-SELECT
-*
-FROM ProductDetail
-;
-
-
-CREATE TABLE ProductDetailUpdated(
-	OrderID int,
-	CustomerName varchar,
-	Products varchar
+  OrderID INT NOT NULL,
+  CustomerName VARCHAR(50),
+  Products VARCHAR(50)
 )
 ;
+INSERT INTO ProductDetail (OrderID, CustomerName, Products)
+VALUES
+  (101,'John Doe','Laptop, Mouse'),
+  (102,'Jane Smith','Tablet, Keyboard, Mouse'),
+  (103,'Emily Clark','Phone')
+;
 
-INSERT INTO ProductDetailUpdated(OrderID, CustomerName, Products)
-VALUES 
-	(101,'John Doe','Laptop'),
-	(101,'John Doe','Mouse'),
-	(102,'Jane Smith','Tablet'),
-	(102,'Jane Smith','Keyboard'),
-	(102,'Jane Smith','Mouse'),
-	(103,'Emily Clark','Phone')
+CREATE TABLE Numbers (n INT);
+
+INSERT INTO Numbers (n)
+VALUES
+  (101),
+  (102),
+  (103)
+;
+
+CREATE TABLE ProductDetailsUpdated (
+  OrderID        INT,
+  CustomerName   VARCHAR(255),
+  Product        VARCHAR(255)
+);
+
+INSERT INTO ProductDetailsUpdated (OrderID, CustomerName, Product)
+-- 1st product
+SELECT
+  OrderID,
+  CustomerName,
+  TRIM(REGEXP_SUBSTR(Products, '[^,]+', 1, 1))
+FROM ProductDetail
+
+UNION ALL
+
+-- 2nd product (only if at least one comma)
+SELECT
+  OrderID,
+  CustomerName,
+  TRIM(REGEXP_SUBSTR(Products, '[^,]+', 1, 2))
+FROM ProductDetail
+WHERE Products LIKE '%,%'
+
+UNION ALL
+
+-- 3rd product (only if at least two commas)
+SELECT
+  OrderID,
+  CustomerName,
+  TRIM(REGEXP_SUBSTR(Products, '[^,]+', 1, 3))
+FROM ProductDetail
+WHERE Products LIKE '%,%,%'
+;
+
+SELECT --Verify all ok
+*
+FROM productdetailsupdated
 ;
 
 /*
@@ -60,7 +87,44 @@ In the table above, the CustomerName column depends on OrderID (a partial depend
 
 Write an SQL query to transform this table into 2NF by removing partial dependencies. Ensure that each non-key column fully depends on the entire primary key.
 */
--- Create the Orders table to remove the partial dependency on CustomerName
+/*Step 0: Create the original table*/
+CREATE TABLE OrderDetails(
+  OrderID INT,
+  CustomerName VARCHAR(50),
+  Product VARCHAR(50),
+  Quantity INT
+);
+INSERT INTO OrderDetails (OrderID,CustomerName,Product, Quantity)
+VALUES
+  (101,'John Doe','Laptop',2),
+  (101,'John Doe','Mouse',1),
+  (102,'Jane Smith','Tablet',3),
+  (102,'Jane Smith','Keyboard',1),
+  (102,'Jane Smith','Mouse',2),
+  (103,'Emily Clark','Phone',1)
+ ;
+ SELECT
+ * 
+ FROM OrderDetails
+ ;
+
+ /*Step 1: Create a Orders table of unique values*/
+ CREATE TABLE Orders(
+   OrderID INT,
+   CustomerName VARCHAR(50)
+ );
+ INSERT INTO Orders (OrderID, CustomerName)
+ SELECT DISTINCT 
+  OrderID, 
+  CustomerName 
+FROM OrderDetails
+;
+SELECT
+* 
+FROM Orders
+;
+
+/*Step 1: Create a Orders table of unique values*/
 CREATE TABLE Orders (
     OrderID INT PRIMARY KEY,
     CustomerName VARCHAR
@@ -72,8 +136,8 @@ SELECT DISTINCT OrderID, CustomerName
 FROM OrderDetails
 ;
 
--- Create the OrderDetails table with a composite primary key (OrderID, Product)
-CREATE TABLE OrderDetails (
+/*Step2: Create an updated OrderDetails table*/
+CREATE TABLE OrderDetailsUpdated (
     OrderID INT,
     Product VARCHAR(255),
     Quantity INT,
@@ -83,7 +147,13 @@ CREATE TABLE OrderDetails (
 ;
 
 -- Insert the remaining details into the OrderDetails table
-INSERT INTO OrderDetails (OrderID, Product, Quantity)
+INSERT INTO OrderDetailsUpdated (OrderID, Product, Quantity)
 SELECT OrderID, Product, Quantity
 FROM OrderDetails
+;
+
+
+SELECT
+*
+FROM orderdetailsupdated
 ;
