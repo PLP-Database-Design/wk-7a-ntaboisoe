@@ -25,14 +25,6 @@ VALUES
   (103,'Emily Clark','Phone')
 ;
 
-CREATE TABLE Numbers (n INT);
-
-INSERT INTO Numbers (n)
-VALUES
-  (101),
-  (102),
-  (103)
-;
 
 CREATE TABLE ProductDetailsUpdated (
   OrderID        INT,
@@ -153,7 +145,7 @@ FROM OrderDetails
 ;
 
 
-SELECT
+SELECT --verify all ok
 *
 FROM orderdetailsupdated
 ;
